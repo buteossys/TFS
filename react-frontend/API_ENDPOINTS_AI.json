@@ -1,0 +1,1586 @@
+{
+  "api_info": {
+    "base_url": "https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1",
+    "base_url_local": "http://localhost:8080/api/v1",
+    "version": "v1",
+    "authentication_methods": [
+      {
+        "type": "jwt_token",
+        "header": "Authorization: Bearer <token>",
+        "description": "JWT token obtained from /auth/token endpoint",
+        "user_type": "customer_user"
+      },
+      {
+        "type": "api_key",
+        "header_option_1": "X-API-Key: <key>",
+        "header_option_2": "Authorization: Bearer <key>",
+        "description": "API key created by backend user",
+        "user_type": "backend_user",
+        "key_prefixes": ["sk_live_", "sk_test_"]
+      }
+    ]
+  },
+  "endpoints": [
+    {
+      "category": "authentication",
+      "endpoint": "/auth/register",
+      "method": "POST",
+      "authentication_required": false,
+      "description": "Register a new customer user account",
+      "request_body": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {"type": "string", "format": "email", "required": true},
+          "password": {"type": "string", "required": true, "min_length": 8},
+          "first_name": {"type": "string", "required": false},
+          "last_name": {"type": "string", "required": false},
+          "address": {"type": "object", "required": false},
+          "phone_number": {"type": "string", "required": false}
+        }
+      },
+      "response": {
+        "status_code": 201,
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "email": {"type": "string"},
+          "first_name": {"type": "string"},
+          "last_name": {"type": "string"},
+          "role": {"type": "string", "enum": ["customer", "admin", "staff"]},
+          "created_at": {"type": "string", "format": "datetime"}
+        }
+      },
+      "errors": [
+        {"status": 400, "description": "Invalid request data or email already exists"}
+      ]
+    },
+    {
+      "category": "authentication",
+      "endpoint": "/auth/token",
+      "method": "POST",
+      "content_type": "application/x-www-form-urlencoded",
+      "authentication_required": false,
+      "description": "Authenticate and receive JWT token",
+      "request_body": {
+        "type": "form_data",
+        "required": ["username", "password"],
+        "properties": {
+          "username": {"type": "string", "format": "email", "required": true},
+          "password": {"type": "string", "required": true}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "access_token": {"type": "string"},
+          "token_type": {"type": "string", "default": "bearer"},
+          "user_id": {"type": "string"}
+        }
+      },
+      "errors": [
+        {"status": 401, "description": "Incorrect username or password"}
+      ]
+    },
+    {
+      "category": "authentication",
+      "endpoint": "/auth/google",
+      "method": "POST",
+      "authentication_required": false,
+      "description": "Authenticate using Google OAuth2 ID token",
+      "request_body": {
+        "type": "object",
+        "required": ["token"],
+        "properties": {
+          "token": {"type": "string", "required": true, "description": "Google ID token"}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "access_token": {"type": "string"},
+          "token_type": {"type": "string", "default": "bearer"}
+        }
+      }
+    },
+    {
+      "category": "products",
+      "endpoint": "/products",
+      "method": "GET",
+      "authentication_required": false,
+      "description": "List all products or get single product by query param",
+      "query_parameters": {
+        "skip": {"type": "integer", "default": 0, "min": 0, "description": "Number of products to skip"},
+        "limit": {"type": "integer", "default": 100, "min": 0, "max": 100, "description": "Maximum products to return"},
+        "id": {"type": "string", "required": false, "description": "Get single product by ID"}
+      },
+      "response": {
+        "status_code": 200,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "name": {"type": "string", "min_length": 3, "max_length": 100},
+            "description": {"type": "string"},
+            "price": {"type": "number", "minimum": 0},
+            "images": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "image_url": {"type": "string"},
+                  "image_priority": {"type": "integer"},
+                  "tag": {"type": "string"},
+                  "product_item_number": {"type": "string"},
+                  "image_metadata": {"type": "object"},
+                  "image_size": {"type": "array", "items": {"type": "integer"}}
+                }
+              }
+            },
+            "category": {"type": "string", "min_length": 3},
+            "stock": {"type": "integer", "minimum": 0},
+            "sku": {"type": "string"},
+            "item_number": {"type": "string"},
+            "weight": {"type": "number"},
+            "dimensions": {"type": "object"},
+            "package_dimensions": {"type": "object"},
+            "materials": {"type": "array", "items": {"type": "string"}},
+            "manufacturer": {"type": "string"},
+            "metadata": {"type": "object"},
+            "created_at": {"type": "string", "format": "datetime"},
+            "modified_at": {"type": "string", "format": "datetime"}
+          }
+        }
+      }
+    },
+    {
+      "category": "products",
+      "endpoint": "/products/{product_id}",
+      "method": "GET",
+      "path_parameters": {
+        "product_id": {"type": "string", "required": true, "description": "Product ID"}
+      },
+      "authentication_required": false,
+      "description": "Get a single product by ID",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "price": {"type": "number"},
+          "images": {"type": "array"},
+          "category": {"type": "string"},
+          "stock": {"type": "integer"},
+          "sku": {"type": "string"},
+          "created_at": {"type": "string", "format": "datetime"}
+        }
+      },
+      "errors": [
+        {"status": 404, "description": "Product not found"}
+      ]
+    },
+    {
+      "category": "products",
+      "endpoint": "/products",
+      "method": "POST",
+      "authentication_required": true,
+      "auth_types": ["jwt_token", "api_key"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Create a new product",
+      "request_body": {
+        "type": "object",
+        "required": ["name", "description", "price", "category", "stock"],
+        "properties": {
+          "name": {"type": "string", "required": true, "min_length": 3, "max_length": 100},
+          "description": {"type": "string", "required": true},
+          "price": {"type": "number", "required": true, "minimum": 0},
+          "images": {
+            "type": "array",
+            "required": false,
+            "items": {
+              "type": "object",
+              "properties": {
+                "image_url": {"type": "string", "required": true},
+                "image_priority": {"type": "integer", "default": 0},
+                "tag": {"type": "string"},
+                "product_item_number": {"type": "string"},
+                "image_metadata": {"type": "object"},
+                "image_size": {"type": "array", "items": {"type": "integer"}}
+              }
+            }
+          },
+          "category": {"type": "string", "required": true, "min_length": 3},
+          "stock": {"type": "integer", "required": true, "minimum": 0},
+          "sku": {"type": "string", "required": false},
+          "item_number": {"type": "string", "required": false},
+          "weight": {"type": "number", "required": false},
+          "dimensions": {"type": "object", "required": false},
+          "package_dimensions": {"type": "object", "required": false},
+          "materials": {"type": "array", "items": {"type": "string"}, "required": false},
+          "manufacturer": {"type": "string", "required": false},
+          "metadata": {"type": "object", "required": false}
+        }
+      },
+      "response": {
+        "status_code": 201,
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "price": {"type": "number"},
+          "images": {"type": "array"},
+          "category": {"type": "string"},
+          "stock": {"type": "integer"},
+          "created_at": {"type": "string", "format": "datetime"}
+        }
+      },
+      "errors": [
+        {"status": 403, "description": "Requires backend user authentication with admin/super_admin role"},
+        {"status": 500, "description": "Failed to create product"}
+      ]
+    },
+    {
+      "category": "products",
+      "endpoint": "/products/{product_id}",
+      "method": "PUT",
+      "path_parameters": {
+        "product_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token", "api_key"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Update an existing product",
+      "request_body": {
+        "type": "object",
+        "required": false,
+        "properties": {
+          "name": {"type": "string", "min_length": 3, "max_length": 100},
+          "description": {"type": "string", "min_length": 10},
+          "price": {"type": "number", "minimum": 0},
+          "images": {"type": "array"},
+          "category": {"type": "string"},
+          "stock": {"type": "integer", "minimum": 0},
+          "sku": {"type": "string"},
+          "modified_at": {"type": "string", "format": "datetime"},
+          "metadata": {"type": "object"},
+          "dimensions": {"type": "object"},
+          "weight": {"type": "number"},
+          "package_dimensions": {"type": "object"},
+          "materials": {"type": "array"},
+          "manufacturer": {"type": "string"}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "price": {"type": "number"},
+          "modified_at": {"type": "string", "format": "datetime"}
+        }
+      },
+      "errors": [
+        {"status": 404, "description": "Product not found"},
+        {"status": 403, "description": "Requires backend user authentication"}
+      ],
+      "alternative_endpoint": "/products?id={product_id}"
+    },
+    {
+      "category": "products",
+      "endpoint": "/products/{product_id}",
+      "method": "DELETE",
+      "path_parameters": {
+        "product_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token", "api_key"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Delete a product",
+      "response": {
+        "status_code": 204,
+        "description": "No content"
+      },
+      "errors": [
+        {"status": 404, "description": "Product not found"},
+        {"status": 403, "description": "Requires backend user authentication"}
+      ],
+      "alternative_endpoint": "/products?id={product_id}"
+    },
+    {
+      "category": "products",
+      "endpoint": "/products/{product_id}/images",
+      "method": "GET",
+      "path_parameters": {
+        "product_id": {"type": "string", "required": true}
+      },
+      "authentication_required": false,
+      "description": "Get all images for a specific product",
+      "response": {
+        "status_code": 200,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "product_item_number": {"type": "string"},
+            "image_url": {"type": "string"},
+            "image_priority": {"type": "integer"},
+            "tag": {"type": "string"},
+            "image_metadata": {"type": "object"},
+            "image_size": {"type": "array", "items": {"type": "integer"}}
+          }
+        }
+      },
+      "errors": [
+        {"status": 404, "description": "Product not found"}
+      ]
+    },
+    {
+      "category": "orders",
+      "endpoint": "/orders",
+      "method": "POST",
+      "authentication_required": true,
+      "auth_types": ["jwt_token", "api_key"],
+      "description": "Create a new order",
+      "authorization_notes": "Customer users can only create orders for themselves",
+      "request_body": {
+        "type": "object",
+        "required": ["user_id", "items", "total_price", "shipping_address"],
+        "properties": {
+          "user_id": {"type": "string", "required": true},
+          "project_id": {"type": "string", "required": false},
+          "items": {
+            "type": "array",
+            "required": true,
+            "items": {
+              "type": "object",
+              "required": ["product_id", "name", "price", "quantity"],
+              "properties": {
+                "product_id": {"type": "string", "required": true},
+                "name": {"type": "string", "required": true},
+                "price": {"type": "number", "required": true, "minimum": 0},
+                "quantity": {"type": "integer", "required": true, "minimum": 1}
+              }
+            }
+          },
+          "total_price": {"type": "number", "required": true, "minimum": 0},
+          "status": {"type": "string", "enum": ["pending", "paid", "processing", "shipped", "delivered", "cancelled"], "default": "pending"},
+          "shipping_address": {
+            "type": "object",
+            "required": true,
+            "required_fields": ["address_line_1", "city", "state", "postal_code", "country"],
+            "properties": {
+              "address_line_1": {"type": "string", "required": true},
+              "address_line_2": {"type": "string", "required": false},
+              "city": {"type": "string", "required": true},
+              "state": {"type": "string", "required": true},
+              "postal_code": {"type": "string", "required": true},
+              "country": {"type": "string", "required": true}
+            }
+          },
+          "selected_rate": {"type": "object", "required": false},
+          "shipment_id": {"type": "string", "required": false},
+          "tracking_code": {"type": "string", "required": false},
+          "label_url": {"type": "string", "required": false}
+        }
+      },
+      "response": {
+        "status_code": 201,
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "user_id": {"type": "string"},
+          "project_id": {"type": "string"},
+          "items": {"type": "array"},
+          "total_price": {"type": "number"},
+          "status": {"type": "string"},
+          "shipping_address": {"type": "object"},
+          "created_at": {"type": "string", "format": "datetime"},
+          "updated_at": {"type": "string", "format": "datetime"}
+        }
+      },
+      "errors": [
+        {"status": 403, "description": "Customer users can only create orders for themselves"},
+        {"status": 401, "description": "Authentication required"}
+      ]
+    },
+    {
+      "category": "orders",
+      "endpoint": "/orders",
+      "method": "GET",
+      "authentication_required": true,
+      "auth_types": ["jwt_token", "api_key"],
+      "description": "List orders",
+      "authorization_notes": "Backend users see all orders, customer users see only their own",
+      "query_parameters": {
+        "id": {"type": "string", "required": false, "description": "Get single order by ID"}
+      },
+      "response": {
+        "status_code": 200,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "user_id": {"type": "string"},
+            "items": {"type": "array"},
+            "total_price": {"type": "number"},
+            "status": {"type": "string"},
+            "created_at": {"type": "string", "format": "datetime"}
+          }
+        }
+      }
+    },
+    {
+      "category": "orders",
+      "endpoint": "/orders/{order_id}",
+      "method": "GET",
+      "path_parameters": {
+        "order_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token", "api_key"],
+      "description": "Get a single order by ID",
+      "authorization_notes": "Backend users can see any order, customer users can only see their own",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "user_id": {"type": "string"},
+          "items": {"type": "array"},
+          "total_price": {"type": "number"},
+          "status": {"type": "string"},
+          "shipping_address": {"type": "object"},
+          "created_at": {"type": "string", "format": "datetime"}
+        }
+      },
+      "errors": [
+        {"status": 404, "description": "Order not found"},
+        {"status": 403, "description": "Customer users can only view their own orders"}
+      ]
+    },
+    {
+      "category": "orders",
+      "endpoint": "/orders/user/{user_id}",
+      "method": "GET",
+      "path_parameters": {
+        "user_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token", "api_key"],
+      "description": "List all orders for a specific user",
+      "authorization_notes": "Backend users can see any user's orders, customer users can only see their own",
+      "response": {
+        "status_code": 200,
+        "type": "array",
+        "items": {"type": "object"}
+      },
+      "errors": [
+        {"status": 403, "description": "Customer users can only view their own orders"}
+      ]
+    },
+    {
+      "category": "orders",
+      "endpoint": "/orders/{order_id}",
+      "method": "PUT",
+      "path_parameters": {
+        "order_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Update an existing order",
+      "request_body": {
+        "type": "object",
+        "required": false,
+        "properties": {
+          "status": {"type": "string", "enum": ["pending", "paid", "processing", "shipped", "delivered", "cancelled"]},
+          "updated_at": {"type": "string", "format": "datetime"}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object"
+      },
+      "errors": [
+        {"status": 404, "description": "Order not found"},
+        {"status": 403, "description": "Requires admin/super_admin role"}
+      ],
+      "alternative_endpoint": "/orders?id={order_id}"
+    },
+    {
+      "category": "orders",
+      "endpoint": "/orders/{order_id}",
+      "method": "DELETE",
+      "path_parameters": {
+        "order_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Delete an order",
+      "response": {
+        "status_code": 204,
+        "description": "No content"
+      },
+      "errors": [
+        {"status": 404, "description": "Order not found"},
+        {"status": 403, "description": "Requires admin/super_admin role"}
+      ],
+      "alternative_endpoint": "/orders?id={order_id}"
+    },
+    {
+      "category": "users",
+      "endpoint": "/users/{user_id}",
+      "method": "GET",
+      "path_parameters": {
+        "user_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token", "api_key"],
+      "description": "Get a user profile",
+      "authorization_notes": "Backend users can see any user, customer users can only see their own",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "email": {"type": "string", "format": "email"},
+          "first_name": {"type": "string"},
+          "last_name": {"type": "string"},
+          "address": {"type": "object"},
+          "phone_number": {"type": "string"},
+          "card_last4": {"type": "string"},
+          "orders": {"type": "array"},
+          "role": {"type": "string", "enum": ["admin", "staff", "customer"]},
+          "created_at": {"type": "string", "format": "datetime"}
+        }
+      },
+      "errors": [
+        {"status": 404, "description": "User not found"},
+        {"status": 403, "description": "Customer users can only view their own profile"}
+      ]
+    },
+    {
+      "category": "users",
+      "endpoint": "/users",
+      "method": "GET",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "List all customer users",
+      "query_parameters": {
+        "id": {"type": "string", "required": false, "description": "Get single user by ID"}
+      },
+      "response": {
+        "status_code": 200,
+        "type": "array",
+        "items": {"type": "object"}
+      }
+    },
+    {
+      "category": "users",
+      "endpoint": "/users",
+      "method": "POST",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Create a new customer user",
+      "request_body": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {"type": "string", "format": "email", "required": true},
+          "password": {"type": "string", "required": true},
+          "first_name": {"type": "string"},
+          "last_name": {"type": "string"},
+          "address": {"type": "object"},
+          "phone_number": {"type": "string"},
+          "role": {"type": "string", "enum": ["admin", "staff", "customer"], "default": "customer"}
+        }
+      },
+      "response": {
+        "status_code": 201,
+        "type": "object"
+      }
+    },
+    {
+      "category": "users",
+      "endpoint": "/users/{user_id}",
+      "method": "PUT",
+      "path_parameters": {
+        "user_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Update user info (full update)",
+      "request_body": {
+        "type": "object",
+        "required": false,
+        "properties": {
+          "email": {"type": "string", "format": "email"},
+          "first_name": {"type": "string"},
+          "last_name": {"type": "string"},
+          "address": {"type": "object"},
+          "phone_number": {"type": "string"},
+          "role": {"type": "string", "enum": ["admin", "staff", "customer"]}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object"
+      },
+      "errors": [
+        {"status": 404, "description": "User not found"}
+      ]
+    },
+    {
+      "category": "users",
+      "endpoint": "/users/{user_id}",
+      "method": "PATCH",
+      "path_parameters": {
+        "user_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Update user info (partial update)",
+      "request_body": {
+        "type": "object",
+        "required": false,
+        "properties": {
+          "email": {"type": "string", "format": "email"},
+          "first_name": {"type": "string"},
+          "last_name": {"type": "string"},
+          "address": {"type": "object"},
+          "phone_number": {"type": "string"},
+          "role": {"type": "string", "enum": ["admin", "staff", "customer"]}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object"
+      },
+      "errors": [
+        {"status": 404, "description": "User not found"}
+      ]
+    },
+    {
+      "category": "users",
+      "endpoint": "/users/{user_id}",
+      "method": "DELETE",
+      "path_parameters": {
+        "user_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Delete user",
+      "response": {
+        "status_code": 204,
+        "description": "No content"
+      },
+      "errors": [
+        {"status": 404, "description": "User not found"}
+      ]
+    },
+    {
+      "category": "categories",
+      "endpoint": "/categories",
+      "method": "GET",
+      "authentication_required": false,
+      "description": "Get all product categories",
+      "query_parameters": {
+        "id": {"type": "string", "required": false, "description": "Get specific category"}
+      },
+      "response": {
+        "status_code": 200,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "name": {"type": "string"},
+            "description": {"type": "string"},
+            "parent_id": {"type": "string"},
+            "image_url": {"type": "string"},
+            "is_active": {"type": "boolean"},
+            "product_count": {"type": "integer"},
+            "created_at": {"type": "string", "format": "datetime"}
+          }
+        }
+      }
+    },
+    {
+      "category": "categories",
+      "endpoint": "/categories/{category_id}",
+      "method": "GET",
+      "path_parameters": {
+        "category_id": {"type": "string", "required": true}
+      },
+      "authentication_required": false,
+      "description": "Get a single category by ID",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "is_active": {"type": "boolean"}
+        }
+      }
+    },
+    {
+      "category": "categories",
+      "endpoint": "/categories",
+      "method": "POST",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Create a new category",
+      "request_body": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {"type": "string", "required": true, "min_length": 1, "max_length": 100},
+          "description": {"type": "string"},
+          "parent_id": {"type": "string"},
+          "image_url": {"type": "string"},
+          "is_active": {"type": "boolean", "default": true}
+        }
+      },
+      "response": {
+        "status_code": 201,
+        "type": "object"
+      }
+    },
+    {
+      "category": "categories",
+      "endpoint": "/categories/{category_id}",
+      "method": "PUT",
+      "path_parameters": {
+        "category_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Update category",
+      "request_body": {
+        "type": "object",
+        "required": false,
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "parent_id": {"type": "string"},
+          "image_url": {"type": "string"},
+          "is_active": {"type": "boolean"}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object"
+      },
+      "alternative_endpoint": "/categories?id={category_id}"
+    },
+    {
+      "category": "categories",
+      "endpoint": "/categories/{category_id}",
+      "method": "DELETE",
+      "path_parameters": {
+        "category_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Delete category",
+      "response": {
+        "status_code": 204,
+        "description": "No content"
+      },
+      "alternative_endpoint": "/categories?id={category_id}"
+    },
+    {
+      "category": "cart",
+      "endpoint": "/cart",
+      "method": "GET",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_user_type": "customer_user",
+      "description": "Get current user's shopping cart",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "items": {"type": "array"},
+          "total": {"type": "number"},
+          "user_id": {"type": "string"}
+        }
+      }
+    },
+    {
+      "category": "cart",
+      "endpoint": "/cart",
+      "method": "POST",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_user_type": "customer_user",
+      "description": "Add item to cart",
+      "request_body": {
+        "type": "object",
+        "required": ["product_id", "quantity"],
+        "properties": {
+          "product_id": {"type": "string", "required": true},
+          "quantity": {"type": "integer", "required": true, "minimum": 1}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "message": {"type": "string"},
+          "item": {"type": "object"},
+          "user_id": {"type": "string"}
+        }
+      }
+    },
+    {
+      "category": "cart",
+      "endpoint": "/cart",
+      "method": "PUT",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_user_type": "customer_user",
+      "description": "Update cart",
+      "request_body": {
+        "type": "object",
+        "required": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "product_id": {"type": "string"},
+                "quantity": {"type": "integer", "minimum": 1}
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "message": {"type": "string"},
+          "cart": {"type": "object"}
+        }
+      }
+    },
+    {
+      "category": "cart",
+      "endpoint": "/cart",
+      "method": "DELETE",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_user_type": "customer_user",
+      "description": "Clear cart",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "message": {"type": "string"},
+          "user_id": {"type": "string"}
+        }
+      }
+    },
+    {
+      "category": "checkout",
+      "endpoint": "/checkout",
+      "method": "POST",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_user_type": "customer_user",
+      "description": "Create checkout session for payment processing",
+      "request_body": {
+        "type": "object",
+        "required": ["order_id", "line_items", "success_url", "cancel_url"],
+        "properties": {
+          "order_id": {"type": "string", "required": true},
+          "project_id": {"type": "string", "required": false},
+          "line_items": {
+            "type": "array",
+            "required": true,
+            "items": {
+              "type": "object",
+              "required": ["price", "quantity"],
+              "properties": {
+                "price": {"type": "integer", "required": true, "description": "Price in cents"},
+                "quantity": {"type": "integer", "required": true, "minimum": 1}
+              }
+            }
+          },
+          "success_url": {"type": "string", "required": true, "format": "uri"},
+          "cancel_url": {"type": "string", "required": true, "format": "uri"}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "checkout_url": {"type": "string", "format": "uri"},
+          "session_id": {"type": "string"}
+        }
+      }
+    },
+    {
+      "category": "shipping",
+      "endpoint": "/shipping/rates",
+      "method": "POST",
+      "authentication_required": false,
+      "description": "Calculate shipping rates for an address and parcel",
+      "request_body": {
+        "type": "object",
+        "required": ["to_address", "parcel"],
+        "properties": {
+          "to_address": {
+            "type": "object",
+            "required": true,
+            "required_fields": ["street1", "city", "state", "zip", "country"],
+            "properties": {
+              "street1": {"type": "string", "required": true},
+              "street2": {"type": "string", "required": false},
+              "city": {"type": "string", "required": true},
+              "state": {"type": "string", "required": true},
+              "zip": {"type": "string", "required": true},
+              "country": {"type": "string", "required": true}
+            }
+          },
+          "parcel": {
+            "type": "object",
+            "required": true,
+            "required_fields": ["length", "width", "height", "weight"],
+            "properties": {
+              "length": {"type": "number", "required": true},
+              "width": {"type": "number", "required": true},
+              "height": {"type": "number", "required": true},
+              "weight": {"type": "number", "required": true}
+            }
+          }
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {"type": "string"},
+            "service": {"type": "string"},
+            "rate": {"type": "string"},
+            "shipment_id": {"type": "string", "description": "Use this for purchasing label"}
+          }
+        }
+      },
+      "errors": [
+        {"status": 400, "description": "No rates found or invalid address/parcel"}
+      ]
+    },
+    {
+      "category": "shipping",
+      "endpoint": "/shipping/purchase-label",
+      "method": "POST",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin"],
+      "description": "Purchase a shipping label for a previously created shipment",
+      "request_body": {
+        "type": "object",
+        "required": ["shipment_id", "rate_id"],
+        "properties": {
+          "shipment_id": {"type": "string", "required": true, "description": "From shipping rates response"},
+          "rate_id": {"type": "string", "required": true, "description": "Selected rate ID from rates response"}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "label_url": {"type": "string", "format": "uri"},
+          "tracking_code": {"type": "string"}
+        }
+      },
+      "errors": [
+        {"status": 400, "description": "Error purchasing label from provider"}
+      ]
+    },
+    {
+      "category": "shipping",
+      "endpoint": "/shipping/webhooks/shipping",
+      "method": "POST",
+      "authentication_required": false,
+      "description": "Webhook endpoint for EasyPost shipping events",
+      "webhook_note": "Signature verification handled internally",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "message": {"type": "string"}
+        }
+      }
+    },
+    {
+      "category": "payments",
+      "endpoint": "/payments/create-payment-link",
+      "method": "POST",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_user_type": "customer_user",
+      "description": "Create a Stripe payment link",
+      "request_body": {
+        "type": "object",
+        "required": ["order_id", "line_items", "success_url", "cancel_url"],
+        "properties": {
+          "order_id": {"type": "string", "required": true},
+          "project_id": {"type": "string", "required": false, "description": "Extracted from order if not provided"},
+          "line_items": {
+            "type": "array",
+            "required": true,
+            "items": {
+              "type": "object",
+              "required": ["price", "quantity"],
+              "properties": {
+                "price": {"type": "integer", "required": true, "description": "Price in cents"},
+                "quantity": {"type": "integer", "required": true, "minimum": 1}
+              }
+            }
+          },
+          "success_url": {"type": "string", "required": true, "format": "uri"},
+          "cancel_url": {"type": "string", "required": true, "format": "uri"}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "url": {"type": "string", "format": "uri", "description": "Stripe Checkout URL"}
+        }
+      },
+      "errors": [
+        {"status": 500, "description": "Error creating payment link"}
+      ]
+    },
+    {
+      "category": "payments",
+      "endpoint": "/payments/pay",
+      "method": "POST",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_user_type": "customer_user",
+      "description": "Process a payment using Stripe Payment Intent",
+      "request_body": {
+        "type": "object",
+        "required": ["amount_cents", "source_id", "order_id"],
+        "properties": {
+          "amount_cents": {"type": "integer", "required": true, "description": "Amount in cents"},
+          "source_id": {"type": "string", "required": true, "description": "Stripe payment source ID"},
+          "order_id": {"type": "string", "required": true}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "payment": {
+            "type": "object",
+            "properties": {
+              "id": {"type": "string"},
+              "status": {"type": "string"}
+            }
+          }
+        }
+      },
+      "errors": [
+        {"status": 500, "description": "Failed to create payment"}
+      ]
+    },
+    {
+      "category": "payments",
+      "endpoint": "/payments/webhook",
+      "method": "POST",
+      "authentication_required": false,
+      "description": "Webhook endpoint for Stripe payment events",
+      "webhook_note": "Signature verification handled internally, extracts project_id from order",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "status": {"type": "string"}
+        }
+      }
+    },
+    {
+      "category": "profile",
+      "endpoint": "/profile",
+      "method": "GET",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_user_type": "customer_user",
+      "description": "Get current user's profile",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "email": {"type": "string", "format": "email"},
+          "first_name": {"type": "string"},
+          "last_name": {"type": "string"},
+          "address": {"type": "object"},
+          "phone_number": {"type": "string"},
+          "card_last4": {"type": "string"},
+          "orders": {"type": "array"},
+          "role": {"type": "string"},
+          "created_at": {"type": "string", "format": "datetime"}
+        }
+      },
+      "errors": [
+        {"status": 404, "description": "User not found"}
+      ]
+    },
+    {
+      "category": "profile",
+      "endpoint": "/profile/{user_id}",
+      "method": "GET",
+      "path_parameters": {
+        "user_id": {"type": "string", "required": true}
+      },
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_user_type": "customer_user",
+      "description": "Get user profile by ID (can only view own profile)",
+      "response": {
+        "status_code": 200,
+        "type": "object"
+      },
+      "errors": [
+        {"status": 403, "description": "You can only view your own profile"},
+        {"status": 404, "description": "User not found"}
+      ]
+    },
+    {
+      "category": "upload",
+      "endpoint": "/upload",
+      "method": "POST",
+      "content_type": "multipart/form-data",
+      "authentication_required": true,
+      "auth_types": ["jwt_token"],
+      "auth_roles": ["super_admin", "admin", "developer"],
+      "description": "Upload an image file to Firebase Storage",
+      "request_body": {
+        "type": "form_data",
+        "required": ["image"],
+        "properties": {
+          "image": {"type": "file", "required": true, "content_type": "image/*"}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "url": {"type": "string", "format": "uri", "description": "Public URL of uploaded image"}
+        }
+      },
+      "errors": [
+        {"status": 400, "description": "File must be an image"},
+        {"status": 500, "description": "Upload failed"}
+      ]
+    },
+    {
+      "category": "email",
+      "endpoint": "/email/send",
+      "method": "POST",
+      "authentication_required": false,
+      "description": "Send an email",
+      "request_body": {
+        "type": "object",
+        "required": ["to", "subject"],
+        "properties": {
+          "to": {"type": "string", "format": "email", "required": true},
+          "subject": {"type": "string", "required": true},
+          "body": {"type": "string", "required": false},
+          "html": {"type": "string", "required": false}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "message": {"type": "string"}
+        }
+      },
+      "errors": [
+        {"status": 400, "description": "Email sending failed"},
+        {"status": 500, "description": "Email endpoint error"}
+      ]
+    },
+    {
+      "category": "email",
+      "endpoint": "/email/register",
+      "method": "POST",
+      "authentication_required": false,
+      "description": "Register an email for early access",
+      "request_body": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {"type": "string", "format": "email", "required": true}
+        }
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "message": {"type": "string"},
+          "email": {"type": "string", "format": "email"}
+        }
+      },
+      "alternative_methods": ["GET"],
+      "alternative_endpoint": "/email/register?email={email}"
+    },
+    {
+      "category": "email",
+      "endpoint": "/email/unsubscribe",
+      "method": "GET",
+      "authentication_required": false,
+      "description": "Unsubscribe from marketing emails (GET)",
+      "query_parameters": {
+        "email": {"type": "string", "format": "email", "required": true},
+        "token": {"type": "string", "required": false, "description": "Optional security token"}
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "success": {"type": "boolean"},
+          "message": {"type": "string"},
+          "email": {"type": "string", "format": "email"}
+        }
+      },
+      "alternative_methods": ["POST"],
+      "alternative_endpoint_post": "/email/unsubscribe",
+      "alternative_request_body": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {"type": "string", "format": "email", "required": true},
+          "token": {"type": "string", "required": false}
+        }
+      }
+    },
+    {
+      "category": "email",
+      "endpoint": "/email/unsubscribe/status",
+      "method": "GET",
+      "authentication_required": false,
+      "description": "Check unsubscribe status for an email address",
+      "query_parameters": {
+        "email": {"type": "string", "format": "email", "required": true}
+      },
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "email": {"type": "string", "format": "email"},
+          "unsubscribed": {"type": "boolean"}
+        }
+      }
+    },
+    {
+      "category": "queue",
+      "endpoint": "/queue/status",
+      "method": "GET",
+      "authentication_required": false,
+      "description": "Get queue status and statistics",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "status": {"type": "string", "enum": ["operational", "error"]},
+          "redis_connected": {"type": "boolean"},
+          "queued_jobs": {"type": "integer"},
+          "redis_info": {
+            "type": "object",
+            "properties": {
+              "connected_clients": {"type": "string"},
+              "used_memory_human": {"type": "string"},
+              "used_memory_peak_human": {"type": "string"}
+            }
+          },
+          "error": {"type": "string", "required": false}
+        }
+      }
+    },
+    {
+      "category": "queue",
+      "endpoint": "/queue/job/{job_id}",
+      "method": "GET",
+      "path_parameters": {
+        "job_id": {"type": "string", "required": true}
+      },
+      "authentication_required": false,
+      "description": "Get status of a specific job",
+      "response": {
+        "status_code": 200,
+        "type": "object",
+        "properties": {
+          "job_id": {"type": "string"},
+          "status": {"type": "string"},
+          "result": {"type": "object"},
+          "finish_timestamp": {"type": "string", "format": "datetime"},
+          "start_timestamp": {"type": "string", "format": "datetime"}
+        }
+      },
+      "errors": [
+        {"status": 404, "description": "Job not found"},
+        {"status": 500, "description": "Error getting job status"}
+      ]
+    }
+  ],
+  "common_error_responses": {
+    "400": {
+      "description": "Bad Request - Invalid request data",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "401": {
+      "description": "Unauthorized - Not authenticated",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "403": {
+      "description": "Forbidden - Insufficient permissions",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "404": {
+      "description": "Not Found - Resource not found",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "500": {
+      "description": "Internal Server Error",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "detail": {"type": "string"}
+        }
+      }
+    }
+  },
+  "pagination": {
+    "description": "List endpoints support pagination via query parameters",
+    "parameters": {
+      "skip": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "description": "Number of items to skip"
+      },
+      "limit": {
+        "type": "integer",
+        "default": 100,
+        "maximum": 100,
+        "minimum": 0,
+        "description": "Maximum items to return"
+      }
+    }
+  },
+  "webhooks": [
+    {
+      "category": "shipping",
+      "endpoint": "/shipping/webhooks/shipping",
+      "provider": "EasyPost",
+      "description": "Receives shipping tracking updates from EasyPost",
+      "authentication": "Signature verification (no auth header required)"
+    },
+    {
+      "category": "payments",
+      "endpoint": "/payments/webhook",
+      "provider": "Stripe",
+      "description": "Receives payment events from Stripe (payment_intent.succeeded, checkout.session.completed, etc.)",
+      "authentication": "Signature verification (no auth header required)",
+      "note": "Automatically determines project_id from order_id in event metadata"
+    }
+  ],
+  "data_models": {
+    "ProductModel": {
+      "type": "object",
+      "required": ["name", "description", "price", "category", "stock"],
+      "properties": {
+        "id": {"type": "string"},
+        "item_number": {"type": "string"},
+        "name": {"type": "string", "min_length": 3, "max_length": 100},
+        "description": {"type": "string"},
+        "price": {"type": "number", "minimum": 0},
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "product_item_number": {"type": "string"},
+              "product_id": {"type": "string"},
+              "image_url": {"type": "string", "required": true},
+              "image_metadata": {"type": "object"},
+              "image_size": {"type": "array", "items": {"type": "integer"}},
+              "image_priority": {"type": "integer", "default": 0, "minimum": 0},
+              "tag": {"type": "string"}
+            }
+          }
+        },
+        "category": {"type": "string", "min_length": 3},
+        "stock": {"type": "integer", "minimum": 0},
+        "sku": {"type": "string"},
+        "created_at": {"type": "string", "format": "datetime"},
+        "modified_at": {"type": "string", "format": "datetime"},
+        "metadata": {"type": "object"},
+        "dimensions": {"type": "object"},
+        "weight": {"type": "number"},
+        "package_dimensions": {"type": "object"},
+        "materials": {"type": "array", "items": {"type": "string"}},
+        "manufacturer": {"type": "string"}
+      }
+    },
+    "OrderModel": {
+      "type": "object",
+      "required": ["user_id", "items", "total_price", "shipping_address"],
+      "properties": {
+        "id": {"type": "string"},
+        "user_id": {"type": "string", "required": true},
+        "project_id": {"type": "string"},
+        "items": {
+          "type": "array",
+          "required": true,
+          "items": {
+            "type": "object",
+            "required": ["product_id", "name", "price", "quantity"],
+            "properties": {
+              "product_id": {"type": "string", "required": true},
+              "name": {"type": "string", "required": true},
+              "price": {"type": "number", "required": true, "minimum": 0},
+              "quantity": {"type": "integer", "required": true, "minimum": 1}
+            }
+          }
+        },
+        "total_price": {"type": "number", "required": true, "minimum": 0},
+        "status": {
+          "type": "string",
+          "enum": ["pending", "paid", "processing", "shipped", "delivered", "cancelled"],
+          "default": "pending"
+        },
+        "shipping_address": {
+          "type": "object",
+          "required": true,
+          "properties": {
+            "address_line_1": {"type": "string", "required": true},
+            "address_line_2": {"type": "string"},
+            "city": {"type": "string", "required": true},
+            "state": {"type": "string", "required": true},
+            "postal_code": {"type": "string", "required": true},
+            "country": {"type": "string", "required": true}
+          }
+        },
+        "selected_rate": {"type": "object"},
+        "shipment_id": {"type": "string"},
+        "tracking_code": {"type": "string"},
+        "label_url": {"type": "string"},
+        "created_at": {"type": "string", "format": "datetime"},
+        "updated_at": {"type": "string", "format": "datetime"}
+      }
+    },
+    "UserModel": {
+      "type": "object",
+      "required": ["email"],
+      "properties": {
+        "id": {"type": "string"},
+        "email": {"type": "string", "format": "email", "required": true},
+        "first_name": {"type": "string"},
+        "last_name": {"type": "string"},
+        "address": {"type": "object"},
+        "phone_number": {"type": "string"},
+        "card_last4": {"type": "string"},
+        "orders": {"type": "array"},
+        "role": {"type": "string", "enum": ["admin", "staff", "customer"], "default": "customer"},
+        "is_admin": {"type": "boolean", "default": false},
+        "email_unsubscribed": {"type": "boolean", "default": false},
+        "email_unsubscribed_at": {"type": "string", "format": "datetime"},
+        "created_at": {"type": "string", "format": "datetime"}
+      }
+    },
+    "CategoryModel": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string", "min_length": 1, "max_length": 100},
+        "description": {"type": "string"},
+        "parent_id": {"type": "string"},
+        "image_url": {"type": "string"},
+        "created_at": {"type": "string", "format": "datetime"},
+        "modified_at": {"type": "string", "format": "datetime"},
+        "is_active": {"type": "boolean", "default": true},
+        "product_count": {"type": "integer"}
+      }
+    }
+  },
+  "usage_notes": {
+    "authentication": {
+      "jwt_token": "Use for customer-facing applications. Tokens expire after 30 minutes.",
+      "api_key": "Use for external applications. Keys are long-lived and have fine-grained permissions."
+    },
+    "authorization": {
+      "public_endpoints": "No authentication required (GET products, categories, etc.)",
+      "customer_user": "Customer users can only access their own data (orders, profile)",
+      "backend_user": "Backend users (admin/super_admin) have full access to all resources",
+      "api_key": "API keys inherit permissions from the backend user who created them, limited by allowed_endpoints"
+    },
+    "multi_tenant": {
+      "project_id": "Many endpoints support project_id for multi-tenant isolation",
+      "project_scoped_credentials": "Shipping and payment operations use project-specific credentials (EasyPost/Stripe keys)"
+    },
+    "webhooks": {
+      "signature_verification": "All webhook endpoints verify signatures automatically",
+      "project_detection": "Webhooks automatically determine project_id from order_id in event metadata"
+    }
+  }
+}
+
