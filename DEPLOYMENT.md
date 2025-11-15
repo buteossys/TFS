@@ -127,7 +127,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
      --region us-central1 \
      --platform managed \
      --allow-unauthenticated \
-     --set-env-vars NEXT_PUBLIC_API_URL=https://api.soar-commerce.com,NEXT_PUBLIC_BASE_URL=https://your-domain.com,NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your-stripe-key,NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your-recaptcha-key \
+     --set-env-vars NEXT_PUBLIC_API_URL=https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1,NEXT_PUBLIC_BASE_URL=https://your-domain.com,NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your-stripe-key,NEXT_PUBLIC_RECAPTCHA_SITE_KEY=your-recaptcha-key \
      --set-secrets SOAR_API_KEY=soar-api-key:latest,NEXTAUTH_SECRET=nextauth-secret:latest,GOOGLE_CLIENT_ID=google-client-id:latest,GOOGLE_CLIENT_SECRET=google-client-secret:latest \
      --memory 2Gi \
      --cpu 2 \
@@ -167,7 +167,7 @@ gcloud run services update fair-shoppe-frontend \
 - `GOOGLE_CLIENT_SECRET`: Google OAuth Client Secret (if using Google login)
 
 ### Public Environment Variables:
-- `NEXT_PUBLIC_API_URL`: Headless backend URL (default: `https://api.soar-commerce.com`)
+- `NEXT_PUBLIC_API_URL`: Headless backend URL (default: `https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1`)
 - `NEXT_PUBLIC_BASE_URL`: Your application's public URL (e.g., `https://yourdomain.com`)
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`: Stripe publishable key (for payment processing)
 - `NEXT_PUBLIC_RECAPTCHA_SITE_KEY`: ReCAPTCHA site key (if using ReCAPTCHA)

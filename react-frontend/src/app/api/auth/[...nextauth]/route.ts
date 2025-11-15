@@ -28,7 +28,7 @@ const authOptions: NextAuthOptions = {
         }
 
         try {
-          const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soar-commerce.com';
+          const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1';
           const API_KEY = process.env.SOAR_API_KEY;
 
           // Authenticate with headless backend
@@ -36,7 +36,7 @@ const authOptions: NextAuthOptions = {
           formData.append('username', credentials.email);
           formData.append('password', credentials.password);
 
-          const response = await fetch(`${API_BASE_URL}/api/v1/auth/token`, {
+          const response = await fetch(`${API_BASE_URL}/auth/token`, {
             method: 'POST',
             headers: {
               'X-API-Key': API_KEY || '',
@@ -51,7 +51,7 @@ const authOptions: NextAuthOptions = {
           const tokenData = await response.json();
           
           // Get user info
-          const userResponse = await fetch(`${API_BASE_URL}/api/v1/users?id=${tokenData.user_id}`, {
+          const userResponse = await fetch(`${API_BASE_URL}/users?id=${tokenData.user_id}`, {
             headers: {
               'Authorization': `Bearer ${tokenData.access_token}`,
               'X-API-Key': API_KEY || '',

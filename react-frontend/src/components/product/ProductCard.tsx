@@ -21,7 +21,8 @@ interface ProductCardProps {
   id: string;
   title?: string;
   name?: string;
-  price: number;
+  price?: number;
+  base_price?: number;
   image?: string;
   images?: Array<{
     image_url: string;
@@ -41,6 +42,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   title,
   name,
   price,
+  base_price,
   image,
   images,
   condition,
@@ -60,6 +62,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const displaySize = size || 'N/A';
   const displayBrand = brand || 'Unknown';
   const displayDescription = description || 'No description available';
+  // Use price or base_price, default to 0 if neither is available
+  const displayPrice = price ?? base_price ?? 0;
 
   const handleAddToCart = () => {
     dispatch({
@@ -67,7 +71,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       payload: {
         id,
         title: displayTitle,
-        price,
+        price: displayPrice,
         image: displayImage,
         category,
         quantity: 1,
@@ -145,7 +149,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {displayTitle}
           </Typography>
           <Typography variant="h6" color="primary" gutterBottom>
-            ${price.toFixed(2)}
+            ${displayPrice.toFixed(2)}
           </Typography>
           <Button
             variant="contained"
@@ -203,7 +207,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 {displayTitle}
               </Typography>
               <Typography variant="h6" color="primary" gutterBottom>
-                ${price.toFixed(2)}
+                ${displayPrice.toFixed(2)}
               </Typography>
               <Typography variant="body1" paragraph>
                 {displayDescription}

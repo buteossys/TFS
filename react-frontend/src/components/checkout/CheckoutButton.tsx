@@ -3,10 +3,6 @@
 import { useState } from 'react';
 import { Button, CircularProgress } from '@mui/material';
 import { useCart } from '@/contexts/CartContext';
-import { loadStripe } from '@stripe/stripe-js';
-
-// Initialize Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface CheckoutButtonProps {
   userId?: string;
@@ -35,24 +31,12 @@ export default function CheckoutButton({ userId }: CheckoutButtonProps) {
 
       const data = await response.json();
       
-      // The API returns { url } for the payment link
+      // The API returns { url } for the payment link (handled by backend)
       if (data.url) {
         // Redirect to payment URL
         window.location.href = data.url;
-      } else if (data.sessionId) {
-        // Fallback: if it's a Stripe session ID, use Stripe redirect
-        const stripe = await stripePromise;
-        if (!stripe) throw new Error('Stripe failed to load');
-        
-        const { error } = await stripe.redirectToCheckout({
-          sessionId: data.sessionId,
-        });
-
-        if (error) {
-          throw error;
-        }
       } else {
-        throw new Error('No payment URL or session ID received');
+        throw new Error('No payment URL received from backend');
       }
     } catch (error) {
       console.error('Error during checkout:', error);

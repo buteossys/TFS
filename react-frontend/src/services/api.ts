@@ -11,11 +11,13 @@ export interface Product {
   id: string;
   title?: string;
   name?: string; // API uses 'name', frontend uses 'title'
-  price: number;
+  price: number; // API returns both 'price' and 'base_price', accepts 'price' which maps to 'base_price'
+  base_price?: number; // API response includes this field
   image?: string;
   images?: Array<{
     image_url: string;
     image_priority?: number;
+    tag?: string;
     alt_text?: string;
   }>;
   condition?: string;
@@ -26,6 +28,10 @@ export interface Product {
   stock?: number;
   sku?: string;
   item_number?: string;
+  is_active?: boolean;
+  available_colors?: string[];
+  available_sizes?: string[];
+  search_keywords?: string[];
 }
 
 export interface User {
@@ -111,10 +117,10 @@ class ApiService {
 
   // Email API methods - call Next.js API routes
   async sendEmail(emailData: {
-    to: string[];
+    to: string;
     subject: string;
     body: string;
-    html_body?: string;
+    html?: string;
   }): Promise<{ success: boolean; message: string }> {
     return this.request<{ success: boolean; message: string }>('/api/contact', {
       method: 'POST',
@@ -144,7 +150,7 @@ export const productService = {
 };
 
 export const emailService = {
-  sendEmail: (emailData: { to: string[]; subject: string; body: string; html_body?: string }) => 
+  sendEmail: (emailData: { to: string; subject: string; body: string; html?: string }) => 
     apiService.sendEmail(emailData),
 };
 

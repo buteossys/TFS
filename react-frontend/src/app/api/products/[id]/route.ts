@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soar-commerce.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1';
 const API_KEY = process.env.SOAR_API_KEY;
 
 export async function GET(
@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/products/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/products/${params.id}`, {
       headers: {
         'X-API-Key': API_KEY || '',
       },
@@ -42,7 +42,7 @@ export async function PUT(
   try {
     const body = await request.json();
     
-    const response = await fetch(`${API_BASE_URL}/api/v1/products/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/products/${params.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/products/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/products/${params.id}`, {
       method: 'DELETE',
       headers: {
         'X-API-Key': API_KEY || '',

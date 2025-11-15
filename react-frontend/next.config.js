@@ -18,7 +18,7 @@ const nextConfig = {
     serverComponentsExternalPackages: []
   },
   // Removed rewrites - all API calls now go through Next.js API routes
-  // which proxy to the headless backend at https://api.soar-commerce.com
+  // which proxy to the headless backend at https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1
 };
 
 module.exports = nextConfig; 

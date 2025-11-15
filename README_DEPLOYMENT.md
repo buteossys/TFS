@@ -47,7 +47,7 @@ Make sure you have:
 - `GOOGLE_CLIENT_SECRET` - If using Google OAuth
 
 ### Public Variables (set during deployment):
-- `NEXT_PUBLIC_API_URL` - Already set to `https://api.soar-commerce.com`
+- `NEXT_PUBLIC_API_URL` - Already set to `https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1`
 - `NEXT_PUBLIC_BASE_URL` - Your production domain
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - If using Stripe
 - `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` - If using ReCAPTCHA

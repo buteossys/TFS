@@ -77,3 +77,4 @@ echo "To update a secret later:"
 echo "  echo -n 'your-real-value' | gcloud secrets versions add SECRET_NAME --data-file=-"
 
 
+

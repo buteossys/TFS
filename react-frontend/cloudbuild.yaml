@@ -37,7 +37,7 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'NEXT_PUBLIC_API_URL=https://api.soar-commerce.com'
+      - 'NEXT_PUBLIC_API_URL=https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1'
       - '--set-secrets'
       - 'SOAR_API_KEY=soar-api-key:latest,NEXTAUTH_SECRET=nextauth-secret:latest,GOOGLE_CLIENT_ID=google-client-id:latest,GOOGLE_CLIENT_SECRET=google-client-secret:latest'
 

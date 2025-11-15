@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.soar-commerce.com';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1';
 const API_KEY = process.env.SOAR_API_KEY;
 
 export async function POST(request: Request) {
@@ -16,24 +16,20 @@ export async function POST(request: Request) {
     }
 
     // Forward to headless backend
-    const response = await fetch(`${API_BASE_URL}/api/v1/payments/create-payment-link`, {
+    const response = await fetch(`${API_BASE_URL}/payments/create-payment-link`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY || '',
       },
       body: JSON.stringify({
+        order_id: `order_${Date.now()}_${userId || 'guest'}`,
         line_items: items.map((item: any) => ({
-          name: item.title || item.name,
-          quantity: String(item.quantity),
-          base_price_money: {
-            amount: Math.round((item.price || 0) * 100), // Convert to cents
-            currency: 'USD'
-          }
+          price: Math.round((item.price || 0) * 100), // Convert to cents
+          quantity: item.quantity
         })),
         success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/checkout/success`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/cart`,
-        order_id: `order_${Date.now()}_${userId || 'guest'}`
+        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/cart`
       }),
     });
 
