@@ -91,19 +91,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     total: 0,
   };
 
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+
   // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
-      initialState.items = JSON.parse(savedCart);
-      initialState.total = initialState.items.reduce(
-        (sum, item) => sum + item.price * item.quantity,
+      const savedItems = JSON.parse(savedCart);
+      const savedTotal = savedItems.reduce(
+        (sum: number, item: CartItem) => sum + item.price * item.quantity,
         0
       );
+      // Restore each item to the cart
+      savedItems.forEach((item: CartItem) => {
+        dispatch({ type: 'ADD_ITEM', payload: item });
+      });
     }
   }, []);
-
-  const [state, dispatch] = useReducer(cartReducer, initialState);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {

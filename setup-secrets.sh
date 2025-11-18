@@ -24,7 +24,7 @@ gcloud config set project $PROJECT_ID
 NEXTAUTH_SECRET=$(openssl rand -base64 32)
 
 # Mock values
-SOAR_API_KEY="mock_soar_api_key_$(openssl rand -hex 16)"
+SOAR_API_KEY="sk_sandbox_51kx32iedfrqU6awVEsyLaQ69uFDyssM"
 GOOGLE_CLIENT_ID="mock_google_client_id_$(openssl rand -hex 16)"
 GOOGLE_CLIENT_SECRET="mock_google_client_secret_$(openssl rand -hex 16)"
 

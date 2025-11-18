@@ -25,16 +25,21 @@ export async function GET(request: Request) {
     console.log('Normalized baseUrl:', baseUrl);
     console.log('API_KEY present:', !!API_KEY);
     console.log('API_KEY length:', API_KEY?.length || 0);
+    console.log('API_KEY first 4 chars:', API_KEY ? API_KEY.substring(0, 4) + '...' : 'N/A');
     
     // Check if API key is missing
-    if (!API_KEY) {
-      console.error('WARNING: SOAR_API_KEY is not set in environment variables!');
-      console.error('Make sure SOAR_API_KEY is in your .env.local file');
+    if (!API_KEY || API_KEY.trim() === '') {
+      console.error('ERROR: SOAR_API_KEY is not set or is empty in environment variables!');
+      console.error('This will cause authentication failures with the backend API.');
+      return NextResponse.json(
+        { error: 'Server configuration error: API key not configured', details: 'SOAR_API_KEY environment variable is missing or empty' },
+        { status: 500 }
+      );
     }
     
     const response = await fetch(fullUrl, {
       headers: {
-        'X-API-Key': API_KEY || '',
+        'X-API-Key': API_KEY,
       },
     });
     

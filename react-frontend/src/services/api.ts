@@ -24,6 +24,7 @@ export interface Product {
   size?: string;
   brand?: string;
   category: string;
+  subcategory?: string; // Optional subcategory field
   description?: string;
   stock?: number;
   sku?: string;

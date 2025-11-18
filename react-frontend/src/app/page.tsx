@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [showButton, setShowButton] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const router = useRouter();
 
   const handleEnterShop = () => {
@@ -21,7 +22,10 @@ export default function Home() {
   };
 
   const handleVideoEnd = () => {
-    router.push('/catalog');
+    setIsTransitioning(true);
+    setTimeout(() => {
+      router.push('/catalog');
+    }, 800); // Allow blur effect to show
   };
 
   return (
@@ -30,12 +34,14 @@ export default function Home() {
       <main className="relative h-screen overflow-hidden">
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-all duration-800 ${
+            isTransitioning ? 'blur-md opacity-80' : ''
+          }`}
           src="/intro_vid.mp4"
           onEnded={handleVideoEnd}
           preload="metadata"
         />
-        {showButton && (
+        {showButton && !isTransitioning && (
           <div className="absolute inset-0 flex items-center justify-center">
             <button
               onClick={handleEnterShop}

@@ -3,7 +3,7 @@
 ## Base URL
 
 ```
-https://soar-api-2pmz2r36bq-uc.a.run.app/api/v1
+https://api.soar-commerce.com/api/v1
 ```
 
 For local development:
@@ -138,6 +138,7 @@ Authenticate using Google OAuth2 ID token.
 - **Stock Management**: The `stock` field in product responses is a computed value aggregated from all active variants. Stock is not stored directly on products but on product variants.
 - **Automatic Primary Variant**: When creating or updating a product, if a `stock` value is provided, the system automatically creates or updates a primary/default variant (with no options) to store that stock quantity. All products have at least one primary variant.
 - **Price Field**: The API accepts `price` in requests, which is automatically mapped to `base_price` in the backend. Responses return `base_price` mapped back to `price` for frontend compatibility.
+- **Subcategory**: Optional `subcategory` may be set and is always associated with a `category`.
 
 #### List All Products
 ```http
@@ -168,6 +169,7 @@ Retrieve a list of products. Public endpoint - no authentication required.
       }
     ],
     "category": "Electronics",
+    "subcategory": "Headphones",
     "stock": 100,
     "sku": "SKU-123",
     "item_number": "ITEM-001",
@@ -201,6 +203,7 @@ Get a single product by its ID. Public endpoint.
   "price": 29.99,
   "images": [...],
   "category": "Electronics",
+  "subcategory": "Headphones",
   "stock": 100,
   "sku": "SKU-123",
   "item_number": "ITEM-001",
@@ -239,6 +242,7 @@ Create a new product. Requires backend user authentication (admin/super_admin ro
     }
   ],
   "category": "Electronics",
+  "subcategory": "Headphones",
   "stock": 50,
   "sku": "SKU-NEW",
   "item_number": "ITEM-001",
@@ -312,6 +316,7 @@ Update an existing product. Requires backend user authentication (admin/super_ad
   "stock": 75,
   "description": "Updated description",
   "category": "Updated Category",
+  "subcategory": "Updated Subcategory",
   "is_active": true,
   "available_colors": ["Red", "Blue", "Green"],
   "search_keywords": ["winter", "cozy"]

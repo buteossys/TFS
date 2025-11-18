@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Typography, Box, CircularProgress, Alert, IconButton } from '@mui/material';
 import { ChevronLeft, ChevronRight, ShoppingCart } from '@mui/icons-material';
+import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import ProductModal from '@/components/ProductModal';
 import Footer from '@/components/Footer';
@@ -70,7 +71,6 @@ const ShelfProduct: React.FC<ShelfProductProps> = ({ product, onClick }) => {
         position: 'relative',
       }}
     >
-      {/* Product Image - 20% to 50% from top */}
       {displayImage ? (
         <Box
           sx={{
@@ -134,7 +134,6 @@ const ShelfProduct: React.FC<ShelfProductProps> = ({ product, onClick }) => {
         </Box>
       )}
       
-      {/* Product Details - Bottom 30% */}
       <Box
         sx={{
           position: 'absolute',
@@ -272,7 +271,6 @@ const ProductCarousel: React.FC<CarouselProps> = ({ products, shelfImage, onProd
         ))}
       </Box>
       
-      {/* Product Cards Container - Full height for positioning */}
       <Box
         sx={{
           position: 'absolute',
@@ -318,7 +316,6 @@ const ProductCarousel: React.FC<CarouselProps> = ({ products, shelfImage, onProd
         </Box>
       </Box>
 
-      {/* Navigation Arrows */}
       {products.length > itemsPerView && (
         <>
           <IconButton
@@ -369,7 +366,9 @@ const ProductCarousel: React.FC<CarouselProps> = ({ products, shelfImage, onProd
   );
 };
 
-export default function AllProducts() {
+export default function CategoryPage() {
+  const params = useParams();
+  const categorySlug = params.slug as string;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -380,7 +379,7 @@ export default function AllProducts() {
 
   useEffect(() => {
     loadProducts();
-  }, []);
+  }, [categorySlug]);
 
   const loadProducts = async () => {
     try {
@@ -388,13 +387,13 @@ export default function AllProducts() {
       setError(null);
       const data = await productService.getAllProducts();
       
-      // Transform API response: map 'name' to 'title' for frontend compatibility
-      const transformedProducts = data.map((product: Product) => ({
-        ...product,
-        title: product.title || product.name || 'Untitled Product',
-      }));
+      const categoryName = categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      const categoryProducts = data.filter(product => 
+        product.category?.toLowerCase() === categoryName.toLowerCase() && 
+        (product.is_active !== false)
+      );
       
-      setProducts(transformedProducts);
+      setProducts(categoryProducts);
     } catch (err) {
       console.error('Error loading products:', err);
       setError('Failed to load products. Please try again later.');
@@ -410,15 +409,36 @@ export default function AllProducts() {
     setIsModalOpen(true);
   };
 
-  // Get unique categories from products
-  const categories = Array.from(
-    new Set(products.map(p => p.category).filter(Boolean))
+  const categoryName = categorySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+  // Group products by subcategory
+  const productsWithoutSubcategory = products.filter(p => !p.subcategory);
+  const subcategories = Array.from(
+    new Set(products.filter(p => p.subcategory).map(p => p.subcategory))
   ).sort() as string[];
 
-  // If no categories found, use default categories
-  const displayCategories = categories.length > 0 
-    ? categories 
-    : ['Home Goods', 'Clothing', 'Art & Antiques'];
+  const sections = [];
+  
+  // Add section for products without subcategory
+  if (productsWithoutSubcategory.length > 0) {
+    sections.push({
+      title: categoryName,
+      products: productsWithoutSubcategory,
+      id: 'main'
+    });
+  }
+
+  // Add sections for each subcategory
+  subcategories.forEach(subcategory => {
+    const subcategoryProducts = products.filter(p => p.subcategory === subcategory);
+    if (subcategoryProducts.length > 0) {
+      sections.push({
+        title: subcategory,
+        products: subcategoryProducts,
+        id: subcategory.toLowerCase().replace(/\s+/g, '-')
+      });
+    }
+  });
 
   return (
     <>
@@ -433,172 +453,164 @@ export default function AllProducts() {
           pt: '64px'
         }}
       >
-      {/* Title Banner */}
-      <Box
-        className="catalog-section"
-        sx={{
-          height: '100vh',
-          backgroundImage: 'url(/end-scene.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          scrollSnapAlign: 'start',
-          position: 'relative'
-        }}
-      >
+        {/* Title Banner */}
         <Box
+          className="catalog-section"
           sx={{
-            textAlign: 'center',
-            maxWidth: '600px',
-            mx: 2
+            height: '100vh',
+            backgroundImage: 'url(/end-scene.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            scrollSnapAlign: 'start',
+            position: 'relative'
           }}
         >
-          <Typography 
-            variant="h2" 
-            sx={{ 
-              fontFamily: 'var(--font-markazi)',
-              color: 'white',
-              mb: 2,
-              fontWeight: 'bold',
-              textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-            }}
-          >
-            Fair Shoppe Catalog
-          </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              fontFamily: 'var(--font-markazi)',
-              color: 'white',
-              textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-            }}
-          >
-            Discover unique treasures across our curated collection
-          </Typography>
-        </Box>
-      </Box>
-
-      {loading && (
-        <Box sx={{ 
-          height: '100vh',
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          scrollSnapAlign: 'start'
-        }}>
-          <CircularProgress size={60} />
-        </Box>
-      )}
-
-      {error && (
-        <Box sx={{ 
-          height: '100vh',
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          scrollSnapAlign: 'start',
-          p: 4
-        }}>
-          <Alert severity="error" sx={{ maxWidth: '600px' }}>
-            {error}
-          </Alert>
-        </Box>
-      )}
-
-      {!loading && !error && products.length === 0 && (
-        <Box sx={{ 
-          height: '100vh',
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center',
-          scrollSnapAlign: 'start'
-        }}>
-          <Typography variant="h6" color="text.secondary">
-            No products available at this time.
-          </Typography>
-        </Box>
-      )}
-
-      {!loading && !error && displayCategories.map((category, index) => {
-        const categoryProducts = products.filter(
-          product => product.category === category && (product.is_active !== false)
-        );
-        
-        if (categoryProducts.length === 0) return null;
-        
-        const backgroundImage = backgroundImages[index % backgroundImages.length];
-        const shelfImage = shelfImages[index % shelfImages.length];
-        
-        return (
           <Box
-            key={category}
-            className="catalog-section"
             sx={{
-              height: '100vh',
-              backgroundImage: `url(${backgroundImage})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              scrollSnapAlign: 'start',
-              position: 'relative',
-              display: 'flex',
-              flexDirection: 'column'
+              textAlign: 'center',
+              maxWidth: '600px',
+              mx: 2
             }}
           >
-            {/* Category Title - Top 20% */}
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '20%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 4,
+            <Typography 
+              variant="h2" 
+              sx={{ 
+                fontFamily: 'var(--font-markazi)',
+                color: 'white',
+                mb: 2,
+                fontWeight: 'bold',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
               }}
             >
-              <Typography 
-                variant="h3" 
-                sx={{ 
-                  fontFamily: 'var(--font-markazi)',
-                  color: '#1a0033',
-                  textAlign: 'center',
-                  fontWeight: 'bold',
-                  textShadow: '2px 2px 4px rgba(255,255,255,0.8)',
+              {categoryName}
+            </Typography>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontFamily: 'var(--font-markazi)',
+                color: 'white',
+                textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+              }}
+            >
+              Explore our curated {categoryName.toLowerCase()} collection
+            </Typography>
+          </Box>
+        </Box>
+
+        {loading && (
+          <Box sx={{ 
+            height: '100vh',
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            scrollSnapAlign: 'start'
+          }}>
+            <CircularProgress size={60} />
+          </Box>
+        )}
+
+        {error && (
+          <Box sx={{ 
+            height: '100vh',
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            scrollSnapAlign: 'start',
+            p: 4
+          }}>
+            <Alert severity="error" sx={{ maxWidth: '600px' }}>
+              {error}
+            </Alert>
+          </Box>
+        )}
+
+        {!loading && !error && sections.length === 0 && (
+          <Box sx={{ 
+            height: '100vh',
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            scrollSnapAlign: 'start'
+          }}>
+            <Typography variant="h6" color="text.secondary">
+              No products available in this category.
+            </Typography>
+          </Box>
+        )}
+
+        {!loading && !error && sections.map((section, index) => {
+          const backgroundImage = backgroundImages[index % backgroundImages.length];
+          const shelfImage = shelfImages[index % shelfImages.length];
+          
+          return (
+            <Box
+              key={section.id}
+              id={section.id}
+              className="catalog-section"
+              sx={{
+                height: '100vh',
+                backgroundImage: `url(${backgroundImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                scrollSnapAlign: 'start',
+                position: 'relative',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '20%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  zIndex: 4,
                 }}
               >
-                {category}
-              </Typography>
+                <Typography 
+                  variant="h3" 
+                  sx={{ 
+                    fontFamily: 'var(--font-markazi)',
+                    color: '#1a0033',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    textShadow: '2px 2px 4px rgba(255,255,255,0.8)',
+                  }}
+                >
+                  {section.title}
+                </Typography>
+              </Box>
+              
+              <ProductCarousel
+                products={section.products}
+                shelfImage={shelfImage}
+                onProductClick={(product) => handleProductClick(product, backgroundImage, shelfImage)}
+              />
             </Box>
-            
-            {/* Product Carousel */}
-            <ProductCarousel
-              products={categoryProducts}
-              shelfImage={shelfImage}
-              onProductClick={(product) => handleProductClick(product, backgroundImage, shelfImage)}
-            />
-          </Box>
-        );
-      })}
+          );
+        })}
 
-      {/* Footer */}
-      <Box sx={{ scrollSnapAlign: 'start' }}>
-        <Footer />
+        <Box sx={{ scrollSnapAlign: 'start' }}>
+          <Footer />
+        </Box>
+
+        <ProductModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          product={selectedProduct}
+          backgroundImage={modalBackgroundImage}
+          shelfImage={modalShelfImage}
+        />
       </Box>
-
-      <ProductModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedProduct}
-        backgroundImage={modalBackgroundImage}
-        shelfImage={modalShelfImage}
-      />
-    </Box>
     </>
   );
 }
